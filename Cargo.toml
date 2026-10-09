@@ -1,0 +1,22 @@
+[package]
+name = "reastream"
+version = "0.1.0"
+edition = "2021"
+description = "Streaming, bounded-memory reader for REA analysis results. Reads the evidence envelope and projects a capability index without materialising the semantic graph."
+license = "MIT"
+repository = "https://github.com/Niyam-Paneru/reastream"
+readme = "README.md"
+keywords = ["reverse-engineering", "streaming-json", "json", "rea"]
+categories = ["parsing", "command-line-utilities"]
+
+[dependencies]
+
+[[bin]]
+name = "reastream"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
