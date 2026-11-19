@@ -1,29 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="355" viewBox="0 0 1000 355" role="img" aria-labelledby="title desc">
-  <title id="title">reastream: keep the evidence, drop the bulk</title>
-  <desc id="desc">A 1.26 gigabyte UTF-16LE REA analysis file is read once by the Rust decoder, lexer, and projector, producing a 6.55 megabyte evidence-bearing index with 19,962 records.</desc>
-  <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2 2 L10 6 L2 10" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  </defs>
-  <rect x="0.5" y="0.5" width="999" height="354" rx="18" fill="#F8FAFC" stroke="#D9E2EC"/>
-  <text x="44" y="47" fill="#172B4D" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="700">Keep the evidence. Drop the bulk.</text>
-  <text x="44" y="74" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="15">One measured REA 6.1.0 run · not a general performance guarantee</text>
-  <rect x="44" y="105" width="228" height="189" rx="13" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-  <text x="65" y="136" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700">INPUT</text>
-  <text x="65" y="191" fill="#0F172A" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700">1.26 GB</text>
-  <text x="65" y="223" fill="#334155" font-family="Arial,Helvetica,sans-serif" font-size="17">REA result file</text>
-  <text x="65" y="249" fill="#64748B" font-family="Arial,Helvetica,sans-serif" font-size="14">UTF-16LE on disk</text>
-  <path d="M283 202 H341" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
-  <rect x="352" y="105" width="292" height="189" rx="13" fill="#EAF3F6" stroke="#91B9C7" stroke-width="2"/>
-  <text x="376" y="136" fill="#265568" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700">reastream · Rust</text>
-  <text x="376" y="177" fill="#0F172A" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700">Decode → scan → project</text>
-  <line x1="376" y1="200" x2="619" y2="200" stroke="#B6D0DA" stroke-width="1.5"/>
-  <text x="376" y="229" fill="#334155" font-family="Arial,Helvetica,sans-serif" font-size="16">Read once. Keep selected fields.</text>
-  <text x="376" y="255" fill="#334155" font-family="Arial,Helvetica,sans-serif" font-size="16">Do not materialize the graph.</text>
-  <path d="M656 202 H714" stroke="#334155" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
-  <rect x="725" y="105" width="230" height="189" rx="13" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-  <text x="746" y="136" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700">OUTPUT</text>
-  <text x="746" y="191" fill="#0F172A" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700">6.55 MB</text>
-  <text x="746" y="223" fill="#334155" font-family="Arial,Helvetica,sans-serif" font-size="17">19,962 records</text>
-  <text x="746" y="249" fill="#64748B" font-family="Arial,Helvetica,sans-serif" font-size="14">Evidence fields retained</text>
-  <text x="44" y="331" fill="#64748B" font-family="Arial,Helvetica,sans-serif" font-size="14">Measured runtime: 110 s (release build) · Full measurement and reproduction notes in docs/measurements</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="390" viewBox="0 0 920 390" role="img" aria-labelledby="ttl ds">
+<title id="ttl">reastream measured compression of analysis output</title>
+<desc id="ds">One REA 6.1.0 file: 1.264 gigabytes on disk, streamed into a 6.55 megabyte evidence-bearing projection of 19,962 records. Kept output is approximately 0.52 percent of on-disk input, drawn to scale.</desc>
+<rect width="920" height="390" rx="16" fill="#FCFCFA"/>
+<text x="38" y="39" fill="#64748B" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="700" letter-spacing="2">REASTREAM / ONE MEASURED RUN</text>
+<text x="38" y="92" fill="#17242F" font-family="Arial,Helvetica,sans-serif" font-size="36" font-weight="700">1.26 GB in. 6.55 MB kept.</text>
+<text x="38" y="124" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="18">A streaming reader kept the evidence fields. It left the giant graph behind.</text>
+<text x="38" y="178" fill="#17242F" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">Source file</text>
+<text x="882" y="178" text-anchor="end" fill="#17242F" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">1,264,678,208 bytes</text>
+<rect x="38" y="193" width="844" height="29" rx="6" fill="#263A48"/>
+<text x="38" y="273" fill="#17242F" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">Projected records</text>
+<text x="882" y="273" text-anchor="end" fill="#17242F" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">6,547,610 bytes</text>
+<rect x="38" y="288" width="844" height="29" rx="6" fill="#E5EAEF"/>
+<rect x="38" y="288" width="4.370" height="29" rx="2" fill="#147D77"/>
+<circle cx="41" cy="302.5" r="5" fill="#147D77"/>
+<line x1="46" y1="302" x2="211" y2="302" stroke="#147D77" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="222" y="307" fill="#147D77" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700">0.52% of the on-disk input</text>
+<line x1="38" y1="343" x2="882" y2="343" stroke="#DCE3EA" stroke-width="1.5"/>
+<text x="38" y="370" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="16">UTF-16LE source</text>
+<text x="319" y="370" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="16">19,962 records</text>
+<text x="657" y="370" fill="#475569" font-family="Arial,Helvetica,sans-serif" font-size="16">110 s / release build</text>
 </svg>
