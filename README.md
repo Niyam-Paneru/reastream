@@ -8,17 +8,11 @@ So I wrote a streaming reader in Rust. It decodes, scans, and keeps the fields I
 
 ![Diagram showing the 1.26 GB REA result streaming through reastream to a 6.55 MB evidence-bearing index](docs/streaming-overview.svg)
 
-## What happened on the measured run
+## What the picture is measuring
 
-| | Result |
-| --- | ---: |
-| Input file | **1,264,678,208 bytes** (UTF-16LE on disk) |
-| Decoded JSON | ~632 MB |
-| Records extracted | **19,962** |
-| Output kept | **6,547,610 bytes** |
-| Runtime | **110 seconds**, release build |
+That tiny green mark is **0.52% of the original on-disk file**. The output is also about 1.04% of the *decoded JSON*; those are different denominators.
 
-Those figures came from one REA 6.1.0 run, not a universal benchmark. The [measurement notes](docs/measurements/README.md) include the environment and how the numbers were obtained.
+This was one measured REA 6.1.0 run: **19,962 extracted records in 110 seconds**. The [measurements](docs/measurements/README.md) document the exact input, environment, and reproduction steps. I don't have evidence that every dataset will behave the same way.
 
 ## What's unusual about the file
 
