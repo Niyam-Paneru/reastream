@@ -41,6 +41,8 @@ for record in &dossier.records {
 }
 ```
 
+On Windows, the repository's original build target is `x86_64-pc-windows-gnu` using portable `llvm-mingw`; it doesn't require a Visual Studio installation. See [Cargo.toml](Cargo.toml) for the release settings.
+
 ## Why a custom reader?
 
 The document's `graph` occupies virtually the entire normalized result. REA's own `--filter-output` can discard that graph, but it also loses the evidence-bearing fields this consumer needs. A normal JSON parser would materialize far more than the desired projection.
