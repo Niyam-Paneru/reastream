@@ -1,64 +1,35 @@
 # reastream
 
-I had a **1.26 GB UTF-16LE analysis result** and only needed its evidence envelope and a useful capability index. Loading the whole file (or filtering away the evidence) was a bad trade.
+I had a **1.26 GB analysis result** and wanted an evidence header plus a list of capabilities. The obvious solution was to load the JSON and pick out those fields.
 
-So I built `reastream`: a Rust streaming reader that projects the required records without materializing the graph. On the [documented REA 6.1.0 run](docs/measurements/README.md), it read **1,264,678,208 bytes**, kept **6,547,610 bytes** across **19,962 records**, and completed in **110 seconds** in release mode. The 632 MB figure refers to *decoded JSON*, not the file on disk.
+Unfortunately, the JSON was approximately the size of my patience.
 
-The graph was large enough to need a chaperone; a streaming parser volunteered.
+So I wrote `reastream` in Rust. It reads a REA result as a stream, keeps the evidence envelope, projects the bits of the semantic graph that matter, and discards the rest as it goes.
 
-**Try it / check the behavior:**
+### The numbers (from one measured run)
 
-```bash
-cargo test
-cargo build --release
-./target/release/reastream result.json --count
-```
+| | Measured |
+| --- | ---: |
+| File read | 1,264,678,208 bytes (UTF-16LE on disk) |
+| Decoded JSON | ~632 MB |
+| Records emitted | 19,962 |
+| Output kept | 6,547,610 bytes (~1.04% of decoded JSON) |
+| Runtime | 110 seconds, release build |
 
-Those numbers describe one measured environment and input, not a universal performance guarantee.
+Those aren't marketing benchmarks. They come from a REA 6.1.0 run, with environment details and reproduction steps in [the measurements](docs/measurements/README.md). Results will differ with input and machine.
 
-## Why
-
-Every consumer of REA inherits the full cost of the result it is handed:
-
-- **Memory.** The 1.26 GB on-disk document (632 MB after decoding) cannot be buffered, and the tooling goes out of
-  its way to avoid it: the companion `reaforensics` project ships
-  `structure.mjs`, a brace-depth scanner rather than a JSON parser, precisely
-  because Node cannot hold the document.
-- **Latency.** The analysis itself took 5 522 s. Reading its result back is not
-  free.
-- **A trap in the current workaround.** `--filter-output` keeps ingestion
-  bounded but drops the evidence envelope (`evidence_id`, `subject`,
-  `provider`), because REA filters inside the result payload. A caller either
-  keeps the entire document, or loses the evidence chain. That is not a trade-off, it is
-  a design limit.
-
-The envelope is at the *front* of the document, which means a streaming reader
-can take it without asking REA for anything different. That is what this does.
-
-## What it does
-
-| | |
-| --- | --- |
-| Envelope | `evidence_id`, `subject`, `provider`, `operation`, `predicate_type` |
-| Capability index | one record per graph node: `node_id`, `kind`, `identity.namespace`, `identity.key` |
-| Coverage | per observation: `label`, `semantic_role`, `resolution_status`, `state`, `confidence` |
-| Honesty | what was read, what was kept, whether the document closed |
-
-Memory is bounded by the largest single value, not by the document. A node is
-projected and released, so its siblings are never held.
-
-## Use
+## Use it
 
 ```sh
+cargo test
 cargo build --release
 ./target/release/reastream result.json --count
 ./target/release/reastream result.json > index.txt
 ```
 
-`--count` reports what was read and what was kept. Default output is one record
-per line; the summary goes to stderr so the records can be piped.
+`--count` tells you what it read and kept. Otherwise records go to stdout, summary to stderr, so you can pipe the output without having to ask it nicely.
 
-As a library:
+As a Rust library:
 
 ```rust
 use reastream::{Dossier, application_rules};
@@ -66,52 +37,22 @@ use reastream::{Dossier, application_rules};
 let rules = application_rules();
 let dossier = Dossier::with_rules(std::fs::File::open("result.json")?, &rules)?;
 for record in &dossier.records {
-    // record.fields is [(name, value)]
+    // record.fields is a collection of (name, value) pairs
 }
 ```
 
-## What it handles
+## Why a custom reader?
 
-A REA document captured on Windows arrives as **UTF-16LE**, because that is
-what shell redirection writes. Reading it as UTF-8 turns every character into a
-NUL and hides the whole document. `reastream` detects the BOM, transcodes, and
-reports which encoding it read — see `tests/decoding.rs`.
+The document's `graph` occupies virtually the entire normalized result. REA's own `--filter-output` can discard that graph, but it also loses the evidence-bearing fields this consumer needs. A normal JSON parser would materialize far more than the desired projection.
 
-## What it does not do
+The reader recognizes UTF-16LE BOMs (a common Windows redirection surprise), transcodes, and projects records as the stream advances. Memory use is bounded by the largest value being processed, rather than the whole document.
 
-It does not verify evidence. REA is the authority for its own `evidence_id`,
-which is a content digest over REA's canonical form; this crate copies the
-identifier and never recomputes it. Reimplementing that hashing would make this
-crate able to disagree with REA about whether a record is authentic, and that
-is the one bug it must not have.
+Code map: [decoder](src/decoding.rs) · [lexer](src/lexer.rs) · [projector](src/projector.rs) · [dossier](src/dossier.rs) · [tests](tests/).
 
-It does not execute targets, and it does not claim a capability it has not read.
+### The part I won't claim
 
-## Building
+`reastream` **copies** REA's `evidence_id`; it does not independently verify the hash. REA owns that canonical format. Reimplementing it here would risk a second, incompatible definition of "authentic."
 
-Rust is the right tool for one reason: the work is a tight scan over bytes where
-`--filter-output` is not good enough, and a conventional JSON parser cannot do
-it at all.
+This tool doesn't run an analysis target, either. It reads the result of one.
 
-No Visual Studio is required. The default target is `x86_64-pc-windows-gnu`
-with the portable `llvm-mingw` toolchain, because the Microsoft toolchain's
-import libraries only ship with Build Tools.
-
-```sh
-cargo test      # 42 tests
-cargo build --release
-```
-
-## Layout
-
-```
-src/decoding.rs   BOM detection and UTF-16LE → UTF-8
-src/lexer.rs      incremental JSON lexer; a string in key position is a key
-src/path.rs       paths, rules, and the dotted syntax they are written in
-src/projector.rs  walks tokens, emits records, drops everything else
-src/dossier.rs    the whole job, plus what it kept and dropped
-```
-
-## License
-
-MIT
+MIT licensed. See [Cargo.toml](Cargo.toml) and the [measured failure cases](docs/measurements/README.md).
