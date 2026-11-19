@@ -1,60 +1,33 @@
 # reastream
 
-I had a **1.26 GB analysis result** and wanted an evidence header plus a list of capabilities. The obvious solution was to load the JSON and pick out those fields.
+I asked a reverse-engineering tool a question. It answered with a **1.26 GB file**.
 
-Unfortunately, the JSON was approximately the size of my patience.
+I only needed the evidence header and a capability index, but the useful records were buried inside an enormous graph. Reading the entire JSON into memory felt like buying a house because I liked one doorknob.
 
-So I wrote `reastream` in Rust. It reads a REA result as a stream, keeps the evidence envelope, projects the bits of the semantic graph that matter, and discards the rest as it goes.
+So I wrote a streaming reader in Rust. It decodes, scans, and keeps the fields I asked for without loading the whole graph.
 
-### The numbers (from one measured run)
+![Diagram showing the 1.26 GB REA result streaming through reastream to a 6.55 MB evidence-bearing index](docs/streaming-overview.svg)
 
-| | Measured |
+## What happened on the measured run
+
+| | Result |
 | --- | ---: |
-| File read | 1,264,678,208 bytes (UTF-16LE on disk) |
+| Input file | **1,264,678,208 bytes** (UTF-16LE on disk) |
 | Decoded JSON | ~632 MB |
-| Records emitted | 19,962 |
-| Output kept | 6,547,610 bytes (~1.04% of decoded JSON) |
-| Runtime | 110 seconds, release build |
+| Records extracted | **19,962** |
+| Output kept | **6,547,610 bytes** |
+| Runtime | **110 seconds**, release build |
 
-Those aren't marketing benchmarks. They come from a REA 6.1.0 run, with environment details and reproduction steps in [the measurements](docs/measurements/README.md). Results will differ with input and machine.
+Those figures came from one REA 6.1.0 run, not a universal benchmark. The [measurement notes](docs/measurements/README.md) include the environment and how the numbers were obtained.
 
-## Use it
+## What's unusual about the file
 
-```sh
-cargo test
-cargo build --release
-./target/release/reastream result.json --count
-./target/release/reastream result.json > index.txt
-```
+The `graph` occupies almost the entire normalized result. REA's filter can discard it, but that also discards the evidence trail I wanted to keep.
 
-`--count` tells you what it read and kept. Otherwise records go to stdout, summary to stderr, so you can pipe the output without having to ask it nicely.
+The reader handles UTF-16LE output from Windows redirection, scans incrementally, and emits selected fields. [Decoder](src/decoding.rs), [lexer](src/lexer.rs), [projector](src/projector.rs), [dossier](src/dossier.rs), and [tests](tests/) are all in the repository.
 
-As a Rust library:
+I also made a deliberate decision **not** to reimplement REA's evidence hash. The tool copies its `evidence_id`; it does not independently authenticate it. Two programs disagreeing about what "valid evidence" means would be a particularly unfun bug.
 
-```rust
-use reastream::{Dossier, application_rules};
+If you want the CLI or library API, the commands and example belong in **[the usage guide](docs/usage.md)**, not on the front page. The [measured failure cases](docs/measurements/README.md) are worth reading too.
 
-let rules = application_rules();
-let dossier = Dossier::with_rules(std::fs::File::open("result.json")?, &rules)?;
-for record in &dossier.records {
-    // record.fields is a collection of (name, value) pairs
-}
-```
-
-On Windows, the repository's original build target is `x86_64-pc-windows-gnu` using portable `llvm-mingw`; it doesn't require a Visual Studio installation. See [Cargo.toml](Cargo.toml) for the release settings.
-
-## Why a custom reader?
-
-The document's `graph` occupies virtually the entire normalized result. REA's own `--filter-output` can discard that graph, but it also loses the evidence-bearing fields this consumer needs. A normal JSON parser would materialize far more than the desired projection.
-
-The reader recognizes UTF-16LE BOMs (a common Windows redirection surprise), transcodes, and projects records as the stream advances. Memory use is bounded by the largest value being processed, rather than the whole document.
-
-Code map: [decoder](src/decoding.rs) · [lexer](src/lexer.rs) · [projector](src/projector.rs) · [dossier](src/dossier.rs) · [tests](tests/).
-
-### The part I won't claim
-
-`reastream` **copies** REA's `evidence_id`; it does not independently verify the hash. REA owns that canonical format. Reimplementing it here would risk a second, incompatible definition of "authentic."
-
-This tool doesn't run an analysis target, either. It reads the result of one.
-
-MIT licensed. See [Cargo.toml](Cargo.toml) and the [measured failure cases](docs/measurements/README.md).
+MIT licensed. This is a reader for analysis results, not an analysis engine.
