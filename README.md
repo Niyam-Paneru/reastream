@@ -1,29 +1,26 @@
 # reastream
 
-A streaming, bounded-memory reader for REA analysis results.
+I had a **1.26 GB UTF-16LE analysis result** and only needed its evidence envelope and a useful capability index. Loading the whole file (or filtering away the evidence) was a bad trade.
 
-REA produces one very large result document per analysis. A REA application
-analysis of the REA source tree produces a document whose semantic graph is
-**100.00% of its length** — measured, not estimated. The envelope a caller
-needs is under two kilobytes at the very front of that document.
+So I built `reastream`: a Rust streaming reader that projects the required records without materializing the graph. On the [documented REA 6.1.0 run](docs/measurements/README.md), it read **1,264,678,208 bytes**, kept **6,547,610 bytes** across **19,962 records**, and completed in **110 seconds** in release mode. The 632 MB figure refers to *decoded JSON*, not the file on disk.
 
-`reastream` reads that document once, as a byte stream, and emits only the
-projection it was asked for. It never holds the document.
+The graph was large enough to need a chaperone; a streaming parser volunteered.
 
-```
-Document        Projection
------------     -----------------------------
-632 MB    →     19 962 records, 6.5 MB
+**Try it / check the behavior:**
+
+```bash
+cargo test
+cargo build --release
+./target/release/reastream result.json --count
 ```
 
-Measured on real REA 6.1.0 output. Runs in 110 seconds on a release build.
-`docs/measurements/README.md` has the commands and the numbers.
+Those numbers describe one measured environment and input, not a universal performance guarantee.
 
 ## Why
 
 Every consumer of REA inherits the full cost of the result it is handed:
 
-- **Memory.** A 632 MB document cannot be buffered, and the tooling goes out of
+- **Memory.** The 1.26 GB on-disk document (632 MB after decoding) cannot be buffered, and the tooling goes out of
   its way to avoid it: the companion `reaforensics` project ships
   `structure.mjs`, a brace-depth scanner rather than a JSON parser, precisely
   because Node cannot hold the document.
@@ -32,7 +29,7 @@ Every consumer of REA inherits the full cost of the result it is handed:
 - **A trap in the current workaround.** `--filter-output` keeps ingestion
   bounded but drops the evidence envelope (`evidence_id`, `subject`,
   `provider`), because REA filters inside the result payload. A caller either
-  keeps all 632 MB, or loses the evidence chain. That is not a trade-off, it is
+  keeps the entire document, or loses the evidence chain. That is not a trade-off, it is
   a design limit.
 
 The envelope is at the *front* of the document, which means a streaming reader
