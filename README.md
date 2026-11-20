@@ -1,30 +1,34 @@
 # reastream
 
-I asked a reverse-engineering tool for some evidence. It handed me a **1.26 GB analysis result**.
+A reverse-engineering tool answered my question with a **1.26 GB file**. I needed the header and a capability index. The rest of the file had apparently invited itself along.
 
-I needed the header and a capability index, not the whole file. My laptop has enough problems without loading it all into memory.
+Loading the whole thing into memory was an option. Writing a Rust streaming reader turned out to be the less ridiculous one, so that's what I did.
 
-So I wrote a Rust streaming reader: decode the input, scan incrementally, and keep the selected records without loading the whole graph.
+It reads the result incrementally, keeps the fields I ask for, and leaves the giant graph out of RAM. Not bad for something that began as “I only need a small part of this.”
 
-## One measured run
+## The receipt
 
-| Measurement | Recorded result |
+One measured run with REA 6.1.0:
+
+| What | Recorded result |
 | --- | ---: |
-| Original REA analysis file | **1.26 GB** |
-| Extracted records | **19,962** |
-| Output records on disk | **6.55 MB** |
-| Share of original on-disk file | **0.52%** |
-| Share of decoded JSON | About **1.04%** |
-| Processing time | **110 seconds** |
+| Input file | **1,264,678,208 bytes** (about 1.26 GB) |
+| Records extracted | **19,962** |
+| Kept data | **6,547,610 bytes** (about 6.55 MB) |
+| Output vs. input on disk | **0.52%** |
+| Output vs. decoded JSON | **1.04%** |
+| Elapsed time | **110 seconds** |
 
-These figures come from **one REA 6.1.0 run**. The input and reproduction details live in [measurements](docs/measurements/README.md). The results describe that run, not a guarantee for every dataset.
+The numbers are from [this recorded workload](docs/measurements/README.md), not a promise that every file will be this polite. The input was UTF-16LE because Windows shell redirection wrote it that way; treating it as ordinary UTF-8 would have been a short and confusing debugging session.
 
-## What the reader actually handles
+## Why not just delete the big part?
 
-The source file's enormous graph contains evidence I want to preserve. Dropping the graph entirely would make the output much smaller and much less useful — the classic “optimization” where you delete the requirement.
+REA's enormous `graph` contains the evidence I actually needed. Filtering out the whole graph made the output smaller, sure. It also made the result rather useless. Excellent compression, terrible research.
 
-The reader handles **UTF-16LE from Windows redirection**, incremental scanning, and selected-field projection. Follow [decoding](src/decoding.rs), [lexer](src/lexer.rs), [projector](src/projector.rs), [dossier](src/dossier.rs), and [tests](tests/).
+The reader decodes Windows UTF-16LE output, scans incrementally and projects selected fields. The interesting bits are [decoding](src/decoding.rs), [lexing](src/lexer.rs), [projection](src/projector.rs), [dossier construction](src/dossier.rs), and [tests](tests/).
 
-I deliberately **copy** REA's evidence IDs rather than reimplement its evidence hash. This tool doesn't independently authenticate those IDs. Two tools giving contradictory answers about the same evidence would defeat the whole exercise.
+One deliberate limit: the reader **copies REA's evidence IDs**, but doesn't independently recompute or validate REA's evidence hash. It's extracting evidence, not certifying it.
 
-The CLI and library examples are in the [usage guide](docs/usage.md). MIT licensed. It's a **reader for analysis results**, not a reverse-engineering engine.
+[How to run it](docs/usage.md) · [Measured failures and setup](docs/measurements/README.md)
+
+MIT licensed. This is a reader for analysis results, **not** the reverse-engineering engine. My laptop has enough jobs already.
