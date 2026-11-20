@@ -1,27 +1,30 @@
 # reastream
 
-I asked a reverse-engineering tool a question. It answered with a **1.26 GB file**.
+I asked a reverse-engineering tool for some evidence. It handed me a **1.26 GB analysis result**.
 
-I only needed the evidence header and a capability index, but the useful records were buried inside an enormous graph. Reading the entire JSON into memory felt like buying a house because I liked one doorknob.
+I needed the header and a capability index, not the entire geological history of the JSON file. Loading it all into RAM would have been a bold lifestyle choice for my laptop.
 
-So I wrote a streaming reader in Rust. It decodes, scans, and keeps the fields I asked for without loading the whole graph.
+So I wrote a Rust streaming reader: decode the input, scan incrementally, and keep the selected records without loading the whole graph.
 
-![Diagram showing the 1.26 GB REA result streaming through reastream to a 6.55 MB evidence-bearing index](docs/streaming-overview.svg)
+## A measured run, not a victory speech
 
-## What the picture is measuring
+| Measurement | Recorded result |
+| --- | ---: |
+| Original REA analysis file | **1.26 GB** |
+| Extracted records | **19,962** |
+| Output records on disk | **6.55 MB** |
+| Share of original on-disk file | **0.52%** |
+| Share of decoded JSON | About **1.04%** |
+| Processing time | **110 seconds** |
 
-That tiny green mark is **0.52% of the original on-disk file**. The output is also about 1.04% of the *decoded JSON*; those are different denominators.
+These figures come from **one REA 6.1.0 run**. The input and reproduction details live in [measurements](docs/measurements/README.md). They're not a promise that every dataset shrinks or runs at the same speed. A sample size of one is a benchmark diary, not a law of physics.
 
-This was one measured REA 6.1.0 run: **19,962 extracted records in 110 seconds**. The [measurements](docs/measurements/README.md) document the exact input, environment, and reproduction steps. I don't have evidence that every dataset will behave the same way.
+## What the reader actually handles
 
-## What's unusual about the file
+The source file's enormous graph contains evidence I want to preserve. Dropping the graph entirely would make the output much smaller and much less useful — the classic “optimization” where you delete the requirement.
 
-The `graph` occupies almost the entire normalized result. REA's filter can discard it, but that also discards the evidence trail I wanted to keep.
+The reader handles **UTF-16LE from Windows redirection**, incremental scanning, and selected-field projection. Follow [decoding](src/decoding.rs), [lexer](src/lexer.rs), [projector](src/projector.rs), [dossier](src/dossier.rs), and [tests](tests/).
 
-The reader handles UTF-16LE output from Windows redirection, scans incrementally, and emits selected fields. [Decoder](src/decoding.rs), [lexer](src/lexer.rs), [projector](src/projector.rs), [dossier](src/dossier.rs), and [tests](tests/) are all in the repository.
+I deliberately **copy** REA's evidence IDs rather than reimplement its evidence hash. This tool doesn't independently authenticate those IDs. Two tools giving contradictory answers about the same evidence would defeat the whole exercise.
 
-I also made a deliberate decision **not** to reimplement REA's evidence hash. The tool copies its `evidence_id`; it does not independently authenticate it. Two programs disagreeing about what "valid evidence" means would be a particularly unfun bug.
-
-If you want the CLI or library API, the commands and example belong in **[the usage guide](docs/usage.md)**, not on the front page. The [measured failure cases](docs/measurements/README.md) are worth reading too.
-
-MIT licensed. This is a reader for analysis results, not an analysis engine.
+The CLI and library examples are in the [usage guide](docs/usage.md). MIT licensed. It's a **reader for analysis results**, not a reverse-engineering engine and definitely not a RAM upgrade.
