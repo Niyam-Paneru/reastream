@@ -1,12 +1,12 @@
 # reastream
 
-A reverse-engineering tool answered my question with a **1.26 GB file**. I needed the header and a capability index. The rest of the file had apparently invited itself along.
+I asked a reverse-engineering tool for a small piece of evidence. It replied with **1,264,678,208 bytes**.
 
-Loading the whole thing into memory was an option. Writing a Rust streaming reader turned out to be the less ridiculous one, so that's what I did.
+At that point I had two options: ask my laptop to swallow the entire file, or write a Rust streaming reader. Somehow the *second* option felt kinder.
 
-It reads the result incrementally, keeps the fields I ask for, and leaves the giant graph out of RAM. Not bad for something that began as “I only need a small part of this.”
+The reader scans the result incrementally and keeps just the records I want. The file is still enormous; my memory usage doesn't have to be. This project was supposed to save me from doing extra work. It has a decent sense of irony.
 
-## The receipt
+## The diet: 1.26 GB in, 6.55 MB kept
 
 One measured run with REA 6.1.0:
 
@@ -19,11 +19,11 @@ One measured run with REA 6.1.0:
 | Output vs. decoded JSON | **1.04%** |
 | Elapsed time | **110 seconds** |
 
-The numbers are from [this recorded workload](docs/measurements/README.md), not a promise that every file will be this polite. The input was UTF-16LE because Windows shell redirection wrote it that way; treating it as ordinary UTF-8 would have been a short and confusing debugging session.
+The numbers are from [one recorded workload](docs/measurements/README.md), not a guarantee that other datasets will behave so nicely. The input was UTF-16LE because Windows shell redirection wrote it that way; treating it as ordinary UTF-8 would have been a short and confusing debugging session.
 
 ## Why not just delete the big part?
 
-REA's enormous `graph` contains the evidence I actually needed. Filtering out the whole graph made the output smaller, sure. It also made the result rather useless. Excellent compression, terrible research.
+REA's enormous `graph` contains the evidence I actually needed. Filtering out the whole graph made the output smaller, sure. It also made the result rather useless. A spectacular speedup, if your goal is to lose the answer.
 
 The reader decodes Windows UTF-16LE output, scans incrementally and projects selected fields. The interesting bits are [decoding](src/decoding.rs), [lexing](src/lexer.rs), [projection](src/projector.rs), [dossier construction](src/dossier.rs), and [tests](tests/).
 
