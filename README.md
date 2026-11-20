@@ -2,11 +2,11 @@
 
 I asked a reverse-engineering tool for some evidence. It handed me a **1.26 GB analysis result**.
 
-I needed the header and a capability index, not the entire geological history of the JSON file. Loading it all into RAM would have been a bold lifestyle choice for my laptop.
+I needed the header and a capability index, not the whole file. My laptop has enough problems without loading it all into memory.
 
 So I wrote a Rust streaming reader: decode the input, scan incrementally, and keep the selected records without loading the whole graph.
 
-## A measured run, not a victory speech
+## One measured run
 
 | Measurement | Recorded result |
 | --- | ---: |
@@ -17,7 +17,7 @@ So I wrote a Rust streaming reader: decode the input, scan incrementally, and ke
 | Share of decoded JSON | About **1.04%** |
 | Processing time | **110 seconds** |
 
-These figures come from **one REA 6.1.0 run**. The input and reproduction details live in [measurements](docs/measurements/README.md). They're not a promise that every dataset shrinks or runs at the same speed. A sample size of one is a benchmark diary, not a law of physics.
+These figures come from **one REA 6.1.0 run**. The input and reproduction details live in [measurements](docs/measurements/README.md). The results describe that run, not a guarantee for every dataset.
 
 ## What the reader actually handles
 
@@ -27,4 +27,4 @@ The reader handles **UTF-16LE from Windows redirection**, incremental scanning, 
 
 I deliberately **copy** REA's evidence IDs rather than reimplement its evidence hash. This tool doesn't independently authenticate those IDs. Two tools giving contradictory answers about the same evidence would defeat the whole exercise.
 
-The CLI and library examples are in the [usage guide](docs/usage.md). MIT licensed. It's a **reader for analysis results**, not a reverse-engineering engine and definitely not a RAM upgrade.
+The CLI and library examples are in the [usage guide](docs/usage.md). MIT licensed. It's a **reader for analysis results**, not a reverse-engineering engine.
