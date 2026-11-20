@@ -1,10 +1,10 @@
 # reastream
 
-I asked a reverse-engineering tool for a small piece of evidence. It replied with **1,264,678,208 bytes**.
+I asked a reverse-engineering tool for a small piece of evidence. It replied with **1,264,678,208 bytes**. I only wanted the useful records buried inside its graph. Reading the whole thing into memory felt like buying a house because I liked one doorknob.
 
-At that point I had two options: ask my laptop to swallow the entire file, or write a Rust streaming reader. Somehow the *second* option felt kinder.
+So I wrote a Rust reader that decodes and streams the result, keeping only the records I asked for. The input remains enormous. My laptop doesn't have to experience all of it at once.
 
-The reader scans the result incrementally and keeps just the records I want. The file is still enormous; my memory usage doesn't have to be. This project was supposed to save me from doing extra work. It has a decent sense of irony.
+![Measured REA result: 1.26 GB of input streamed into 6.55 MB of evidence-bearing records, drawn to scale](docs/streaming-overview.svg)
 
 ## The diet: 1.26 GB in, 6.55 MB kept
 
