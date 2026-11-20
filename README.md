@@ -4,8 +4,6 @@ I asked a reverse-engineering tool for a small piece of evidence. It replied wit
 
 So I wrote a Rust reader that decodes and streams the result, keeping only the records I asked for. The input remains enormous. My laptop doesn't have to experience all of it at once.
 
-![Measured REA result: 1.26 GB of input streamed into 6.55 MB of evidence-bearing records, drawn to scale](docs/streaming-overview.svg)
-
 ## The diet: 1.26 GB in, 6.55 MB kept
 
 One measured run with REA 6.1.0:
